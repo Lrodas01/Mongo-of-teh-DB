@@ -26,15 +26,20 @@ mongoose.connect(process.env.MONGO_DB_URI)
 // routes
 app.get('/', (req, res) => res.status(200).send('Server is Running :)'));
 
-app.get('/get-profiles', async (req, res) => {
+app.get('/get-profiles', (req, res) => {
+    async function run() {
     try {
-        const profiles = await ProfileModel.find();
-        res.status(200).json(profiles);
+        const database = client.db("UserInfo"); 
+        const profiles = database.collection("Profiles"); 
+        const result = await profiles.find().toArray(); 
+        res.status(200).send(result);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to fetch profiles' });
+        console.log(err);
+    };
     }
+    run().catch(console.dir);
 });
+
 
 app.delete('/delete-profiles', (req, res) => {
     async function run () {
@@ -60,17 +65,21 @@ app.delete('/delete-profiles', (req, res) => {
 );
 
 
-app.post('/add-profile', async (req, res) => {
+app.post('/add-profile', (req, res) => {
     const incomingData = req.body;
-    try {
+
+    try{
         const newProfile = new ProfileModel(incomingData);
-        await newProfile.save();
-        res.status(200).json({ message: 'Profile added successfully' });
+        newProfile.save();
+
+        res.status(200).send({
+            message: 'saved profile'
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Failed to add profile' });
+        console.log(err);
     }
 });
+
 app.listen(port, () => {
     console.log(`Server is running on port:${port}`);
 });
